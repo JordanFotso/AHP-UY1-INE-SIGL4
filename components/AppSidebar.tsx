@@ -38,6 +38,11 @@ const items = [
     id: 'analysis',
   },
   {
+    title: 'Détails',
+    icon: LayoutDashboard,
+    id: 'details',
+  },
+  {
     title: 'Résultats',
     icon: BarChart3,
     id: 'results',

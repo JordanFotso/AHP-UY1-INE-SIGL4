@@ -10,8 +10,9 @@ import AlternativesManagement from '@/components/AlternativesManagement';
 import PairwiseComparison from '@/components/PairwiseComparison';
 import AlternativeScoring from '@/components/AlternativeScoring';
 import ResultsSection from '@/components/ResultsSection';
+import AnalysisDetails from '@/components/AnalysisDetails';
 import Onboarding from '@/components/Onboarding';
-import { Sparkles, LayoutDashboard, Settings2, Table2, BarChart3 } from 'lucide-react';
+import { Sparkles, Settings2, Table2, BarChart3, Calculator } from 'lucide-react';
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState('setup');
@@ -126,7 +127,7 @@ export default function Home() {
       .map((alt, idx) => ({ alternative: alt, score: finalScores[idx] }))
       .sort((a, b) => b.score - a.score);
 
-    setResults({ weights, cr, ranking, isConsistent: cr < 0.1 });
+    setResults({ weights, cr, ranking, isConsistent: cr < 0.1, pairwiseMatrix });
     setActiveSection('results');
   };
 
@@ -187,6 +188,7 @@ export default function Home() {
               <h1 className="text-lg font-semibold tracking-tight text-foreground/90 flex items-center gap-2">
                 {activeSection === 'setup' && <><Settings2 className="h-4 w-4" /> Configuration</>}
                 {activeSection === 'analysis' && <><Table2 className="h-4 w-4" /> Analyse Pairée</>}
+                {activeSection === 'details' && <><Calculator className="h-4 w-4" /> Détails Mathématiques</>}
                 {activeSection === 'results' && <><BarChart3 className="h-4 w-4" /> Résultats & Ranking</>}
               </h1>
             </div>
@@ -267,6 +269,32 @@ export default function Home() {
                       matrix={scoringMatrix}
                       onChange={handleScoringChange}
                     />
+                  )}
+                </div>
+              )}
+
+              {activeSection === 'details' && (
+                <div className="max-w-5xl mx-auto">
+                  {pairwiseMatrix.length > 0 ? (
+                    <AnalysisDetails 
+                      criteria={criteria}
+                      pairwiseMatrix={pairwiseMatrix}
+                    />
+                  ) : (
+                    <Card className="border-dashed bg-muted/30">
+                      <CardContent className="pt-20 pb-20 text-center">
+                        <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-muted mb-6">
+                          <Calculator className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <h2 className="text-xl font-bold mb-2">Aucune donnée d'analyse</h2>
+                        <p className="text-muted-foreground max-w-sm mx-auto mb-6">
+                          Commencez par configurer vos critères et effectuer les comparaisons pour voir les détails ici.
+                        </p>
+                        <Button onClick={() => setActiveSection('analysis')}>
+                          Aller à l'analyse
+                        </Button>
+                      </CardContent>
+                    </Card>
                   )}
                 </div>
               )}

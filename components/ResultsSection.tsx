@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Trophy, CheckCircle2, AlertTriangle, ArrowRight, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -14,6 +13,7 @@ interface ResultsSectionProps {
     cr: number;
     ranking: { alternative: string; score: number }[];
     isConsistent: boolean;
+    pairwiseMatrix: number[][];
   };
   criteria: string[];
 }
@@ -25,8 +25,6 @@ export default function ResultsSection({ results, criteria }: ResultsSectionProp
     name: item.alternative,
     score: parseFloat((item.score * 100).toFixed(2)),
   }));
-
-  const COLORS = ['#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef'];
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000">
