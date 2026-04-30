@@ -20,7 +20,7 @@ Une application SaaS pour la prise de décision structurée basée sur la métho
 
 ```bash
 # Cloner le projet
-git clone https://github.com/JordanFotso/classification.git
+git clone https://github.com/JordanFotso/AHP-UY1-INE-SIGL4.git
 
 # Installer les dépendances
 npm install
@@ -39,4 +39,4 @@ Pour plus de détails sur le fonctionnement technique et la méthodologie AHP, c
 
 ---
 Développé pour faciliter les décisions complexes.
-# AHN-UY1-INE-SIGL4
+# AHP-UY1-INE-SIGL4
