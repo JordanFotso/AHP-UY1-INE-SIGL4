@@ -66,7 +66,7 @@ export function AppSidebar({ activeSection, onSectionChange, lockedSections }: A
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-bold leading-none">AHP Studio</span>
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Premium</span>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">INE-SIGL-1</span>
           </div>
         </div>
       </SidebarHeader>
