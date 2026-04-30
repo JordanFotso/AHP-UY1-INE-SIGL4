@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calculator, Sigma, Info, Activity, FunctionSquare, Table as TableIcon } from 'lucide-react';
+import { Calculator, Sigma, Info, Activity, FunctionSquare, Table as TableIcon, CheckCircle2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AnalysisDetailsProps {
@@ -67,6 +67,10 @@ export default function AnalysisDetails({ criteria, pairwiseMatrix }: AnalysisDe
 
   const currentRI = saatyRI.find(item => item.n === n)?.ri ?? 1.49;
 
+  // 7. Calcul du Ratio de Cohérence (CR)
+  const cr = currentRI > 0 ? ci / currentRI : 0;
+  const isConsistent = cr < 0.1;
+
   const formatValue = (value: number): string => {
     if (value === 1) return '1';
     if (value < 1) {
@@ -79,30 +83,30 @@ export default function AnalysisDetails({ criteria, pairwiseMatrix }: AnalysisDe
   if (criteria.length === 0) return null;
 
   return (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20">
-      <div className="flex flex-col gap-2">
-        <h2 className="text-3xl font-black tracking-tight flex items-center gap-3">
-          <Calculator className="h-8 w-8 text-primary" />
-          Détails de l'Analyse Mathématique
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20 max-w-5xl mx-auto">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-4xl font-black tracking-tight flex items-center gap-3">
+          <Calculator className="h-9 w-9 text-primary" />
+          Analyse Mathématique
         </h2>
-        <p className="text-muted-foreground text-sm max-w-2xl">
-          Exploration rigoureuse des étapes de la méthode AHP (Analytical Hierarchy Process) de Saaty pour la détermination des poids et la validation de la cohérence.
+        <p className="text-muted-foreground text-base">
+          Exploration rigoureuse des étapes de la méthode AHP (Analytical Hierarchy Process) de Saaty.
         </p>
       </div>
 
-      {/* 1. Matrice de comparaison avec sommes */}
-      <div className="space-y-4">
-        <Card className="rounded-3xl border-border/40 bg-card/50 backdrop-blur-sm shadow-xl overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b border-border/20 pb-4">
+      {/* 1. Matrice de Comparaison Initiale */}
+      <div className="space-y-3">
+        <Card className="rounded-2xl border-border/40 bg-card/50 backdrop-blur-sm shadow-lg overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b border-border/20 py-4 px-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold text-sm">1</div>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-white font-bold text-xs">1</div>
               <CardTitle className="text-xl font-bold">Matrice de Comparaison Initiale (A)</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="text-xs uppercase bg-muted/50 font-bold">
+              <table className="w-full text-base text-left">
+                <thead className="text-sm uppercase bg-muted/50 font-bold">
                   <tr>
                     <th className="px-6 py-4 border-b border-border/20">Critères</th>
                     {criteria.map((c, i) => (
@@ -110,22 +114,21 @@ export default function AnalysisDetails({ criteria, pairwiseMatrix }: AnalysisDe
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/20">
+                <tbody className="divide-y divide-border/20 text-lg">
                   {pairwiseMatrix.map((row, i) => (
                     <tr key={i} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-6 py-4 font-bold bg-muted/10">{criteria[i]}</td>
+                      <td className="px-6 py-4 font-bold bg-muted/10 text-base">{criteria[i]}</td>
                       {row.map((val, j) => (
-                        <td key={j} className="px-6 py-4 text-center">{formatValue(val)}</td>
+                        <td key={j} className="px-6 py-4 text-center font-medium">{formatValue(val)}</td>
                       ))}
                     </tr>
                   ))}
                   <tr className="bg-primary/5 font-black text-primary">
-                    <td className="px-6 py-6 font-black uppercase tracking-wider flex items-center gap-2">
-                      <Sigma className="h-4 w-4" />
-                      Somme Colonne (Sj)
+                    <td className="px-6 py-6 font-black uppercase text-xs tracking-wider flex items-center gap-2">
+                      <Sigma className="h-4 w-4" /> Somme Colonne (Sj)
                     </td>
                     {columnSums.map((sum, j) => (
-                      <td key={j} className="px-6 py-6 text-center border-t-2 border-primary/20 font-mono">
+                      <td key={j} className="px-6 py-6 text-center border-t-2 border-primary/20 font-mono text-xl">
                         {sum.toFixed(3)}
                       </td>
                     ))}
@@ -135,111 +138,102 @@ export default function AnalysisDetails({ criteria, pairwiseMatrix }: AnalysisDe
             </div>
           </CardContent>
         </Card>
-        <div className="p-6 bg-muted/10 rounded-2xl border border-dashed border-border/60 flex gap-4 items-start shadow-inner">
-          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-            <Info className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <h4 className="font-bold text-sm text-foreground/80 mb-1">Étape 1 : Construction et Sommation</h4>
+        <div className="p-4 bg-muted/5 rounded-xl border border-dashed border-border/40 flex gap-3 items-start shadow-inner">
+          <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h4 className="font-bold text-xs text-foreground/80">Étape 1 : Construction et Sommation</h4>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              La matrice de comparaison réciproque est construite à partir des jugements de l'utilisateur. La sommation de chaque colonne <strong>Sj = Σ a_ij</strong> est une étape intermédiaire impérative pour l'obtention du vecteur de priorité par la méthode de normalisation.
+              La matrice est construite sur les jugements réciproques. La sommation <strong>Sj = Σ a_ij</strong> est impérative pour la normalisation.
             </p>
           </div>
         </div>
       </div>
 
-      {/* 2. Matrice normalisée et calcul des poids */}
-      <div className="space-y-4">
-        <Card className="rounded-3xl border-border/40 bg-card/50 backdrop-blur-sm shadow-xl overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b border-border/20 pb-4">
+      {/* 2. Normalisation et Poids */}
+      <div className="space-y-3">
+        <Card className="rounded-2xl border-border/40 bg-card/50 backdrop-blur-sm shadow-lg overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b border-border/20 py-4 px-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500 font-bold text-sm">2</div>
-              <CardTitle className="text-xl font-bold">Normalisation et Calcul du Vecteur de Priorité (W)</CardTitle>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white font-bold text-xs">2</div>
+              <CardTitle className="text-xl font-bold">Vecteur de Priorité (W)</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="text-xs uppercase bg-muted/50 font-bold">
+              <table className="w-full text-base text-left">
+                <thead className="text-sm uppercase bg-muted/50 font-bold">
                   <tr>
                     <th className="px-6 py-4 border-b border-border/20">Critères</th>
                     {criteria.map((c, i) => (
-                      <th key={i} className="px-6 py-4 text-center border-b border-border/20 font-medium opacity-70">{c}</th>
+                      <th key={i} className="px-6 py-4 text-center border-b border-border/20 font-medium opacity-50">{c}</th>
                     ))}
                     <th className="px-6 py-4 text-center border-b border-primary/20 bg-primary/10 text-primary font-black">Poids Final (W_i)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/20">
+                <tbody className="divide-y divide-border/20 text-lg">
                   {normalizedMatrix.map((row, i) => (
                     <tr key={i} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-6 py-4 font-bold bg-muted/10">{criteria[i]}</td>
+                      <td className="px-6 py-4 font-bold bg-muted/10 text-base">{criteria[i]}</td>
                       {row.map((val, j) => (
-                        <td key={j} className="px-6 py-4 text-center font-mono text-xs opacity-60">{val.toFixed(3)}</td>
+                        <td key={j} className="px-6 py-4 text-center font-mono text-sm opacity-50">{val.toFixed(3)}</td>
                       ))}
-                      <td className="px-6 py-4 text-center font-black bg-primary/5 text-primary border-l border-primary/10 text-sm whitespace-nowrap">
-                        {criteriaWeights[i].toFixed(4)} <span className="text-[10px] opacity-70 font-medium ml-1">({(criteriaWeights[i] * 100).toFixed(2)}%)</span>
+                      <td className="px-6 py-4 text-center font-black bg-primary/5 text-primary border-l border-primary/10 text-2xl whitespace-nowrap">
+                        {criteriaWeights[i].toFixed(4)} <span className="text-xs opacity-60 ml-1">({(criteriaWeights[i] * 100).toFixed(2)}%)</span>
                       </td>
                     </tr>
                   ))}
-                  <tr className="bg-muted/5 text-muted-foreground">
-                    <td className="px-6 py-4 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
-                      <Sigma className="h-3 w-3" />
-                      Total Normalisé
-                    </td>
-                    {normalizedColumnSums.map((sum, j) => (
-                      <td key={j} className="px-6 py-4 text-center border-t border-border/20 font-mono text-xs">
-                        {Math.round(sum)}
-                      </td>
+                  <tr className="bg-muted/5 text-muted-foreground text-xs uppercase font-bold">
+                    <td className="px-6 py-4">Total Normalisé</td>
+                    {normalizedColumnSums.map((_, j) => (
+                      <td key={j} className="px-6 py-4 text-center font-mono">1.000</td>
                     ))}
-                    <td className="px-6 py-4 bg-primary/10 border-l border-primary/20 text-center font-bold text-primary text-xs">1.000</td>
+                    <td className="px-6 py-4 bg-primary/10 text-primary text-center text-sm font-black">1.000 (100%)</td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </CardContent>
         </Card>
-        <div className="p-6 bg-muted/10 rounded-2xl border border-dashed border-border/60 flex gap-4 items-start shadow-inner">
-          <div className="h-8 w-8 rounded-full bg-indigo-500/10 flex items-center justify-center shrink-0 mt-0.5">
-            <Info className="h-4 w-4 text-indigo-500" />
-          </div>
-          <div>
-            <h4 className="font-bold text-sm text-foreground/80 mb-1">Étape 2 : Vecteur Propre Approximatif</h4>
+        <div className="p-4 bg-muted/5 rounded-xl border border-dashed border-border/40 flex gap-3 items-start shadow-inner">
+          <Info className="h-4 w-4 text-indigo-500 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h4 className="font-bold text-sm text-foreground/80">Étape 2 : Normalisation et Moyenne</h4>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              L'étape de normalisation consiste à diviser chaque élément par la somme de sa colonne (<strong>b_ij = a_ij / Sj</strong>). Le vecteur de priorité (W) est ensuite obtenu en calculant la moyenne arithmétique des lignes de la matrice normalisée. Cette méthode fournit une approximation robuste du vecteur propre principal de la matrice.
+              <strong>b_ij = a_ij / Sj</strong>. Le vecteur de priorité (W) est obtenu par la moyenne arithmétique des lignes normalisées, offrant une approximation du vecteur propre principal.
             </p>
           </div>
         </div>
       </div>
 
-      {/* 3. Consistency - Pondération */}
-      <div className="space-y-4">
-        <Card className="rounded-3xl border-border/40 bg-card/50 backdrop-blur-sm shadow-xl overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b border-border/20 pb-4">
+      {/* 3. Produit Matriciel */}
+      <div className="space-y-3">
+        <Card className="rounded-2xl border-border/40 bg-card/50 backdrop-blur-sm shadow-lg overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b border-border/20 py-4 px-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-500/10 text-green-600 font-bold text-sm">3</div>
-              <CardTitle className="text-xl font-bold">Produit Matriciel (A × W)</CardTitle>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-600 text-white font-bold text-xs">3</div>
+              <CardTitle className="text-xl font-bold">Vérification : Produit Matriciel (A × W)</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="text-xs uppercase bg-muted/50 font-bold">
+              <table className="w-full text-base text-left">
+                <thead className="text-sm uppercase bg-muted/50 font-bold">
                   <tr>
                     <th className="px-6 py-4 border-b border-border/20">Critères</th>
                     {criteria.map((c, i) => (
-                      <th key={i} className="px-6 py-4 text-center border-b border-border/20 italic font-medium opacity-70">{c} (×W_j)</th>
+                      <th key={i} className="px-6 py-4 text-center border-b border-border/20 font-medium opacity-50 text-[10px]">{c} (×Wj)</th>
                     ))}
-                    <th className="px-6 py-4 text-center border-b border-green-600/20 bg-green-500/5 text-green-700 font-black">Somme Pondérée (A·W)</th>
+                    <th className="px-6 py-4 text-center border-b border-green-600/20 bg-green-500/5 text-green-700 font-black italic text-lg">Vecteur A·W</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/20">
+                <tbody className="divide-y divide-border/20 text-lg">
                   {weightedMatrix.map((row, i) => (
                     <tr key={i} className="hover:bg-green-500/5 transition-colors">
-                      <td className="px-6 py-4 font-bold bg-muted/10">{criteria[i]}</td>
+                      <td className="px-6 py-4 font-bold bg-muted/10 text-base">{criteria[i]}</td>
                       {row.map((val, j) => (
-                        <td key={j} className="px-6 py-4 text-center font-mono text-[10px] opacity-60">{val.toFixed(4)}</td>
+                        <td key={j} className="px-6 py-4 text-center font-mono text-[10px] opacity-40">{val.toFixed(4)}</td>
                       ))}
-                      <td className="px-6 py-4 text-center font-black bg-green-500/10 text-green-700 border-l border-green-500/10 text-base">
+                      <td className="px-6 py-4 text-center font-black bg-green-500/10 text-green-700 border-l border-green-500/10 text-2xl">
                         {weightedSums[i].toFixed(4)}
                       </td>
                     </tr>
@@ -249,46 +243,35 @@ export default function AnalysisDetails({ criteria, pairwiseMatrix }: AnalysisDe
             </div>
           </CardContent>
         </Card>
-        <div className="p-6 bg-muted/10 rounded-2xl border border-dashed border-border/60 flex gap-4 items-start shadow-inner">
-          <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center shrink-0 mt-0.5">
-            <Info className="h-4 w-4 text-green-500" />
-          </div>
-          <div>
-            <h4 className="font-bold text-sm text-foreground/80 mb-1">Étape 3 : Vecteur de Somme Pondérée</h4>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Pour initier le test de cohérence, on calcule le produit matriciel de la matrice originale (A) par le vecteur de poids (W). On obtient ainsi un nouveau vecteur (A·W) dont chaque composante est la somme des produits de la ligne par les poids respectifs.
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* 4. Lambda_i */}
-      <div className="space-y-4">
-        <Card className="rounded-3xl border-border/40 bg-card/50 backdrop-blur-sm shadow-xl overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b border-border/20 pb-4">
+      <div className="space-y-3">
+        <Card className="rounded-2xl border-border/40 bg-card/50 backdrop-blur-sm shadow-lg overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b border-border/20 py-4 px-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10 text-orange-600 font-bold text-sm">4</div>
-              <CardTitle className="text-xl font-bold">Estimation des Valeurs Propres (λi)</CardTitle>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-600 text-white font-bold text-xs">4</div>
+              <CardTitle className="text-xl font-bold">Valeurs Propres Individuelles (λi)</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="text-xs uppercase bg-muted/50 font-bold">
+              <table className="w-full text-base text-left">
+                <thead className="text-sm uppercase bg-muted/50 font-bold text-center">
                   <tr>
-                    <th className="px-6 py-4 border-b border-border/20">Critères</th>
-                    <th className="px-6 py-4 text-center border-b border-border/20 font-medium opacity-70">Somme Pondérée (A·W)_i</th>
-                    <th className="px-6 py-4 text-center border-b border-border/20 font-medium opacity-70">Crit. Weight (W_i)</th>
-                    <th className="px-6 py-4 text-center border-b border-orange-600/20 bg-orange-500/5 text-orange-700 font-black">Lambda (λi)</th>
+                    <th className="px-6 py-4 border-b border-border/20 text-left">Critères</th>
+                    <th className="px-6 py-4 border-b border-border/20 opacity-60">Somme (A·W)_i</th>
+                    <th className="px-6 py-4 border-b border-border/20 opacity-60">Poids W_i</th>
+                    <th className="px-6 py-4 border-b border-orange-600/20 bg-orange-500/5 text-orange-700 font-black text-lg">Lambda λi</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/20">
+                <tbody className="divide-y divide-border/20 text-xl">
                   {criteria.map((criterion, i) => (
                     <tr key={i} className="hover:bg-orange-500/5 transition-colors">
-                      <td className="px-6 py-4 font-bold bg-muted/10">{criterion}</td>
-                      <td className="px-6 py-4 text-center font-mono text-xs opacity-60">{weightedSums[i].toFixed(4)}</td>
-                      <td className="px-6 py-4 text-center font-mono text-xs opacity-60">{criteriaWeights[i].toFixed(4)}</td>
-                      <td className="px-6 py-4 text-center font-black bg-orange-500/10 text-orange-700 border-l border-orange-500/10 text-lg">
+                      <td className="px-6 py-4 font-bold bg-muted/10 text-base">{criterion}</td>
+                      <td className="px-6 py-4 text-center font-mono text-base opacity-50">{weightedSums[i].toFixed(4)}</td>
+                      <td className="px-6 py-4 text-center font-mono text-base opacity-50">{criteriaWeights[i].toFixed(4)}</td>
+                      <td className="px-6 py-4 text-center font-black bg-orange-500/10 text-orange-700 border-l border-orange-500/10 text-3xl">
                         {lambdas[i].toFixed(4)}
                       </td>
                     </tr>
@@ -298,110 +281,87 @@ export default function AnalysisDetails({ criteria, pairwiseMatrix }: AnalysisDe
             </div>
           </CardContent>
         </Card>
-        <div className="p-6 bg-muted/10 rounded-2xl border border-dashed border-border/60 flex gap-4 items-start shadow-inner">
-          <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0 mt-0.5">
-            <Activity className="h-4 w-4 text-orange-500" />
-          </div>
-          <div>
-            <h4 className="font-bold text-sm text-foreground/80 mb-1">Étape 4 : Détermination des Rapports de Cohérence Individuels</h4>
+        <div className="p-4 bg-muted/5 rounded-xl border border-dashed border-border/40 flex gap-3 items-start shadow-inner">
+          <Activity className="h-4 w-4 text-orange-500 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h4 className="font-bold text-sm text-foreground/80">Étape 4 : Rapports de Cohérence Individuels</h4>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Le rapport <strong>λi = (A·W)_i / W_i</strong> est calculé pour chaque critère. Si les jugements étaient parfaitement cohérents, chaque λi serait exactement égal à n (le nombre de critères). Les variations observées ici reflètent l'incohérence relative des comparaisons.
+              <strong>λi = (A·W)_i / W_i</strong>. Plus ces valeurs sont proches de n ({n}), plus la matrice est cohérente.
             </p>
           </div>
         </div>
       </div>
 
-      {/* 5. Lambda Max & CI Formulas */}
-      <div className="space-y-4">
-        <Card className="rounded-3xl border-border/40 bg-card/50 backdrop-blur-sm shadow-xl overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b border-border/20 pb-4">
+      {/* 5. Lambda Max & CI */}
+      <div className="space-y-3">
+        <Card className="rounded-2xl border-border/40 bg-card/50 backdrop-blur-sm shadow-lg overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b border-border/20 py-4 px-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 font-bold text-sm">5</div>
-              <CardTitle className="text-xl font-bold">Calcul de λmax et CI (Indice de Cohérence)</CardTitle>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-xs">5</div>
+              <CardTitle className="text-xl font-bold">Synthèse : λmax et Indice CI</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="p-8 space-y-10">
-            {/* Lambda Max Section */}
+          <CardContent className="p-8 space-y-12">
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-blue-600 mb-2">
                 <FunctionSquare className="h-5 w-5" />
                 <h4 className="font-bold uppercase tracking-wider text-xs">1. Valeur Propre Maximale (λmax)</h4>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
                 <div className="bg-muted/30 p-6 rounded-2xl border border-border/20 flex flex-col items-center justify-center gap-4 shadow-inner">
                   <span className="text-xs text-muted-foreground font-medium italic">Formule Algébrique :</span>
-                  <div className="text-2xl font-mono tracking-tighter">
-                    λmax = <span className="text-primary font-black">1/n</span> · Σ <span className="text-primary font-black">λi</span>
-                  </div>
+                  <div className="text-2xl font-mono tracking-tighter">λmax = <span className="text-primary font-black">1/n</span> · Σ <span className="text-primary font-black">λi</span></div>
                 </div>
                 <div className="bg-blue-500/5 p-6 rounded-2xl border border-blue-500/10 flex flex-col items-center justify-center gap-4">
                   <span className="text-xs text-blue-600/60 font-medium italic">Application Numérique :</span>
-                  <div className="text-sm font-mono text-center leading-relaxed">
+                  <div className="text-base font-mono text-center leading-relaxed">
                     ({lambdas.map(l => l.toFixed(4)).join(' + ')}) / {n}
                     <br />
-                    <span className="text-2xl font-black text-blue-700 mt-2 block">
-                      = {lambdaMax.toFixed(4)}
-                    </span>
+                    <span className="text-4xl font-black text-blue-700 mt-2 block">= {lambdaMax.toFixed(4)}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* CI Section */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-blue-600 mb-2">
                 <FunctionSquare className="h-5 w-5" />
                 <h4 className="font-bold uppercase tracking-wider text-xs">2. Indice de Cohérence (CI)</h4>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
                 <div className="bg-muted/30 p-6 rounded-2xl border border-border/20 flex flex-col items-center justify-center gap-4 shadow-inner">
                   <span className="text-xs text-muted-foreground font-medium italic">Formule de Saaty :</span>
-                  <div className="text-2xl font-mono tracking-tighter text-center">
-                    CI = (λmax - n) / (n - 1)
-                  </div>
+                  <div className="text-2xl font-mono tracking-tighter text-center">CI = (λmax - n) / (n - 1)</div>
                 </div>
                 <div className="bg-blue-500/5 p-6 rounded-2xl border border-blue-500/10 flex flex-col items-center justify-center gap-4">
                   <span className="text-xs text-blue-600/60 font-medium italic">Application Numérique :</span>
-                  <div className="text-sm font-mono text-center leading-relaxed">
+                  <div className="text-base font-mono text-center leading-relaxed">
                     ({lambdaMax.toFixed(4)} - {n}) / ({n} - 1)
                     <br />
-                    <span className="text-2xl font-black text-blue-700 mt-2 block">
-                      = {ci.toFixed(4)}
-                    </span>
+                    <span className="text-4xl font-black text-blue-700 mt-2 block">= {ci.toFixed(4)}</span>
                   </div>
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
-        <div className="p-6 bg-muted/10 rounded-2xl border border-dashed border-border/60 flex gap-4 items-start shadow-inner">
-          <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0 mt-0.5">
-            <Info className="h-4 w-4 text-blue-500" />
-          </div>
-          <div>
-            <h4 className="font-bold text-sm text-foreground/80 mb-1">Étape 5 : Mesure du Degré d'Incohérence</h4>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Le <strong>λmax</strong> représente la valeur propre moyenne. L'<strong>Indice de Cohérence (CI)</strong> est un indicateur de la déviance par rapport à une cohérence parfaite. Une matrice est dite consistante si CI est proche de 0. L'écart (λmax - n) est utilisé comme mesure de l'erreur systématique dans les jugements.
-            </p>
-          </div>
-        </div>
       </div>
 
-      {/* 6. Random Index (RI) */}
-      <div className="space-y-4">
-        <Card className="rounded-3xl border-border/40 bg-card/50 backdrop-blur-sm shadow-xl overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b border-border/20 pb-4">
+      {/* 6. Random Index RI */}
+      <div className="space-y-3">
+        <Card className="rounded-2xl border-border/40 bg-card/50 backdrop-blur-sm shadow-lg overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b border-border/20 py-4 px-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 font-bold text-sm">6</div>
-              <CardTitle className="text-xl font-bold">Indice Aléatoire de Saaty (RI)</CardTitle>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-600 text-white font-bold text-xs">6</div>
+              <CardTitle className="text-xl font-bold">Indice Aléatoire (RI)</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
+              <table className="w-full text-base text-left">
                 <thead className="text-xs uppercase bg-muted/50 font-bold">
                   <tr>
-                    <th className="px-6 py-4 border-b border-border/20">n (Ordre de la matrice)</th>
+                    <th className="px-6 py-4 border-b border-border/20">n (Ordre)</th>
                     {saatyRI.map((item) => (
                       <th key={item.n} className={cn("px-4 py-4 text-center border-b border-border/20", item.n === n ? "bg-purple-600 text-white" : "")}>{item.n}</th>
                     ))}
@@ -409,9 +369,9 @@ export default function AnalysisDetails({ criteria, pairwiseMatrix }: AnalysisDe
                 </thead>
                 <tbody className="divide-y divide-border/20">
                   <tr>
-                    <td className="px-6 py-6 font-bold bg-muted/10">RI (Indice Aléatoire)</td>
+                    <td className="px-6 py-8 font-bold bg-muted/10 uppercase text-xs">Valeur RI</td>
                     {saatyRI.map((item) => (
-                      <td key={item.n} className={cn("px-4 py-6 text-center font-mono text-xs", item.n === n ? "bg-purple-500/10 text-purple-700 font-black border-t-2 border-purple-600" : "opacity-60")}>
+                      <td key={item.n} className={cn("px-4 py-8 text-center font-black text-2xl", item.n === n ? "bg-purple-500/10 text-purple-700 border-t-4 border-purple-600" : "opacity-30")}>
                         {item.ri.toFixed(2)}
                       </td>
                     ))}
@@ -421,17 +381,68 @@ export default function AnalysisDetails({ criteria, pairwiseMatrix }: AnalysisDe
             </div>
           </CardContent>
         </Card>
-        <div className="p-6 bg-muted/10 rounded-2xl border border-dashed border-border/60 flex gap-4 items-start shadow-inner">
-          <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center shrink-0 mt-0.5">
-            <TableIcon className="h-4 w-4 text-purple-500" />
-          </div>
-          <div>
-            <h4 className="font-bold text-sm text-foreground/80 mb-1">Étape 6 : Normalisation par Aléatoire</h4>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              L'<strong>Indice Aléatoire (RI)</strong> est la valeur CI moyenne pour une matrice de même ordre remplie de jugements aléatoires. Saaty a déterminé ces valeurs empiriquement. Pour n={n}, nous utilisons RI = <strong>{currentRI.toFixed(2)}</strong>. Ce dénominateur permet de transformer CI en un ratio relatif (CR).
-            </p>
-          </div>
+        <div className="p-4 bg-muted/5 rounded-xl border border-dashed border-border/40 flex gap-3 items-start shadow-inner text-xs text-muted-foreground italic leading-relaxed">
+          <TableIcon className="h-4 w-4 text-purple-500 shrink-0 mt-0.5" />
+          L'<strong>Indice Aléatoire (RI)</strong> est la déviance moyenne pour une matrice aléatoire de même ordre (travaux empiriques de Saaty).
         </div>
+      </div>
+
+      {/* 7. Ratio de Cohérence CR */}
+      <div className="space-y-3">
+        <Card className={cn(
+          "rounded-3xl border-none shadow-2xl overflow-hidden transition-all duration-500",
+          isConsistent ? "bg-gradient-to-br from-green-500/10 to-emerald-500/20" : "bg-gradient-to-br from-red-500/10 to-orange-500/20"
+        )}>
+          <CardHeader className="border-b border-border/10 py-6 px-8">
+            <div className="flex items-center gap-4">
+              <div className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-xl font-bold text-white shadow-xl",
+                isConsistent ? "bg-green-600 animate-pulse" : "bg-red-600"
+              )}>7</div>
+              <div>
+                <CardTitle className="text-2xl font-black">Ratio de Cohérence Final (CR)</CardTitle>
+                <p className="text-xs opacity-70 uppercase tracking-widest font-bold">Validation du Modèle Décisionnel</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-10 space-y-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+              <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 flex flex-col items-center justify-center gap-6 shadow-2xl">
+                <span className="text-xs uppercase tracking-widest font-black opacity-60">Formule Finale</span>
+                <div className="text-4xl font-mono tracking-tighter">CR = <span className="text-primary font-black">CI / RI</span></div>
+              </div>
+              <div className={cn(
+                "p-8 rounded-3xl border-2 flex flex-col items-center justify-center gap-6 shadow-2xl transition-colors",
+                isConsistent ? "bg-green-500/10 border-green-500/20" : "bg-red-500/10 border-red-500/20"
+              )}>
+                <span className="text-xs uppercase tracking-widest font-black opacity-60">Application Numérique</span>
+                <div className="text-base font-mono text-center leading-relaxed">
+                  {ci.toFixed(4)} / {currentRI.toFixed(2)}
+                  <br />
+                  <span className={cn("text-6xl font-black mt-4 block tracking-tighter", isConsistent ? "text-green-700" : "text-red-700")}>
+                    = {(cr * 100).toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className={cn(
+              "p-8 rounded-3xl flex gap-6 items-center border-4 shadow-inner",
+              isConsistent ? "bg-green-500/20 border-green-500/30 text-green-900" : "bg-red-500/20 border-red-500/30 text-red-900"
+            )}>
+              {isConsistent ? <CheckCircle2 className="h-12 w-12 shrink-0 animate-in zoom-in" /> : <AlertCircle className="h-12 w-12 shrink-0 animate-bounce" />}
+              <div>
+                <h4 className="font-black text-2xl mb-2">{isConsistent ? "Analyse Validée" : "Incohérence Critique"}</h4>
+                <p className="text-lg opacity-90 leading-relaxed font-medium">
+                  {isConsistent 
+                    ? `Le ratio de cohérence (${(cr * 100).toFixed(2)}%) est inférieur au seuil de 10%. Vos jugements sont mathématiquement fiables.` 
+                    : `Le ratio (${(cr * 100).toFixed(2)}%) dépasse le seuil de 10%. Veuillez réévaluer vos comparaisons par paires pour éliminer les contradictions.`
+                  }
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
