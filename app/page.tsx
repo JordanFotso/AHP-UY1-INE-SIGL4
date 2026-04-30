@@ -107,13 +107,35 @@ export default function Home() {
   };
 
   const computeResults = () => {
-    if (criteria.length === 0 || alternatives.length === 0) {
-      return;
-    }
+    if (criteria.length === 0 || alternatives.length === 0) return;
 
-    const weights = computeWeights(pairwiseMatrix);
-    const cr = computeConsistencyRatio(pairwiseMatrix);
+    const n = criteria.length;
 
+    // 1. Somme des colonnes
+    const columnSums = pairwiseMatrix[0].map((_, j) => 
+      pairwiseMatrix.reduce((sum, row) => sum + row[j], 0)
+    );
+
+    // 2. Normalisation et Poids (Méthode Arithmétique pour cohérence avec Détails)
+    const normalizedMatrix = pairwiseMatrix.map((row) => 
+      row.map((val, j) => columnSums[j] > 0 ? val / columnSums[j] : 0)
+    );
+    const weights = normalizedMatrix.map(row => 
+      row.reduce((sum, val) => sum + val, 0) / n
+    );
+
+    // 3. Calcul de la cohérence
+    const weightedSums = pairwiseMatrix.map((row, i) => 
+      row.reduce((sum, val, j) => sum + val * weights[j], 0)
+    );
+    const lambdas = weightedSums.map((ws, i) => weights[i] > 0 ? ws / weights[i] : 0);
+    const lambdaMax = lambdas.reduce((sum, val) => sum + val, 0) / n;
+    const ci = n > 1 ? (lambdaMax - n) / (n - 1) : 0;
+    const riTable: any = { 1: 0, 2: 0, 3: 0.58, 4: 0.9, 5: 1.12, 6: 1.24, 7: 1.32, 8: 1.41, 9: 1.45, 10: 1.49 };
+    const ri = riTable[n] || 1.49;
+    const cr = ri > 0 ? ci / ri : 0;
+
+    // 4. Scoring des alternatives
     const normalizedScoring = scoringMatrix.map(row => {
       const sum = row.reduce((a, b) => a + b, 0);
       return row.map(val => sum > 0 ? val / sum : 0);
@@ -129,36 +151,6 @@ export default function Home() {
 
     setResults({ weights, cr, ranking, isConsistent: cr < 0.1, pairwiseMatrix });
     setActiveSection('results');
-  };
-
-  const computeWeights = (matrix: number[][]): number[] => {
-    const n = matrix.length;
-    if (n === 0) return [];
-    const geometricMeans = matrix.map(row => {
-      const product = row.reduce((a, b) => a * b, 1);
-      return Math.pow(product, 1 / n);
-    });
-    const sum = geometricMeans.reduce((a, b) => a + b, 0);
-    return geometricMeans.map(gm => gm / sum);
-  };
-
-  const computeConsistencyRatio = (matrix: number[][]): number => {
-    const n = matrix.length;
-    if (n <= 2) return 0;
-    const weights = computeWeights(matrix);
-    let sumWeightedSum = 0;
-    for (let i = 0; i < n; i++) {
-      let weightedSum = 0;
-      for (let j = 0; j < n; j++) {
-        weightedSum += matrix[i][j] * weights[j];
-      }
-      sumWeightedSum += weightedSum / weights[i];
-    }
-    const lambda = sumWeightedSum / n;
-    const ci = (lambda - n) / (n - 1);
-    const ri = [0, 0, 0, 0.58, 0.9, 1.12, 1.24, 1.32, 1.41, 1.45, 1.49];
-    const cr = ci / (ri[n] || 1.49);
-    return cr;
   };
 
   const handleReset = () => {
@@ -194,20 +186,11 @@ export default function Home() {
             </div>
             
             <div className="flex items-center gap-3">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleReset}
-                className="rounded-full border-border/60 hover:bg-muted/50"
-              >
+              <Button variant="outline" size="sm" onClick={handleReset} className="rounded-full border-border/60 hover:bg-muted/50">
                 Réinitialiser
               </Button>
               {criteria.length > 0 && alternatives.length > 0 && (
-                <Button 
-                  size="sm" 
-                  onClick={computeResults}
-                  className="rounded-full bg-primary hover:bg-primary/90 shadow-md shadow-primary/20"
-                >
+                <Button size="sm" onClick={computeResults} className="rounded-full bg-primary hover:bg-primary/90 shadow-md shadow-primary/20">
                   <Sparkles className="mr-2 h-4 w-4" />
                   Calculer
                 </Button>
@@ -219,56 +202,26 @@ export default function Home() {
             <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
               {activeSection === 'setup' && (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
-                  <CriteriaManagement 
-                    criteria={criteria}
-                    onAdd={handleAddCriterion}
-                    onRemove={handleRemoveCriterion}
-                    onRename={handleRenameCriterion}
-                  />
-                  <AlternativesManagement 
-                    alternatives={alternatives}
-                    onAdd={handleAddAlternative}
-                    onRemove={handleRemoveAlternative}
-                    onRename={handleRenameAlternative}
-                  />
+                  <CriteriaManagement criteria={criteria} onAdd={handleAddCriterion} onRemove={handleRemoveCriterion} onRename={handleRenameCriterion} />
+                  <AlternativesManagement alternatives={alternatives} onAdd={handleAddAlternative} onRemove={handleRemoveAlternative} onRename={handleRenameAlternative} />
                 </div>
               )}
 
               {activeSection === 'analysis' && (
                 <div className="space-y-8 max-w-5xl mx-auto">
-                  {criteria.length > 1 ? (
-                    <PairwiseComparison 
-                      criteria={criteria}
-                      matrix={pairwiseMatrix}
-                      onChange={handlePairwiseChange}
-                    />
-                  ) : (
+                  {criteria.length > 1 ? <PairwiseComparison criteria={criteria} matrix={pairwiseMatrix} onChange={handlePairwiseChange} /> : (
                     <Card className="border-dashed bg-muted/30">
                       <CardContent className="pt-12 pb-12 text-center">
                         <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-4">
                           <Settings2 className="h-6 w-6 text-muted-foreground" />
                         </div>
-                        <p className="text-muted-foreground font-medium">
-                          Ajoutez au moins deux critères pour commencer l'analyse.
-                        </p>
-                        <Button 
-                          variant="link" 
-                          onClick={() => setActiveSection('setup')}
-                          className="mt-2 text-primary"
-                        >
-                          Aller à la configuration
-                        </Button>
+                        <p className="text-muted-foreground font-medium">Ajoutez au moins deux critères pour commencer l'analyse.</p>
+                        <Button variant="link" onClick={() => setActiveSection('setup')} className="mt-2 text-primary">Aller à la configuration</Button>
                       </CardContent>
                     </Card>
                   )}
-                  
                   {alternatives.length > 0 && criteria.length > 0 && (
-                    <AlternativeScoring 
-                      alternatives={alternatives}
-                      criteria={criteria}
-                      matrix={scoringMatrix}
-                      onChange={handleScoringChange}
-                    />
+                    <AlternativeScoring alternatives={alternatives} criteria={criteria} matrix={scoringMatrix} onChange={handleScoringChange} />
                   )}
                 </div>
               )}
@@ -276,10 +229,7 @@ export default function Home() {
               {activeSection === 'details' && (
                 <div className="max-w-5xl mx-auto">
                   {pairwiseMatrix.length > 0 ? (
-                    <AnalysisDetails 
-                      criteria={criteria}
-                      pairwiseMatrix={pairwiseMatrix}
-                    />
+                    <AnalysisDetails criteria={criteria} pairwiseMatrix={pairwiseMatrix} />
                   ) : (
                     <Card className="border-dashed bg-muted/30">
                       <CardContent className="pt-20 pb-20 text-center">
@@ -287,12 +237,8 @@ export default function Home() {
                           <Calculator className="h-8 w-8 text-muted-foreground" />
                         </div>
                         <h2 className="text-xl font-bold mb-2">Aucune donnée d'analyse</h2>
-                        <p className="text-muted-foreground max-w-sm mx-auto mb-6">
-                          Commencez par configurer vos critères et effectuer les comparaisons pour voir les détails ici.
-                        </p>
-                        <Button onClick={() => setActiveSection('analysis')}>
-                          Aller à l'analyse
-                        </Button>
+                        <p className="text-muted-foreground max-w-sm mx-auto mb-6">Commencez par configurer vos critères et effectuer les comparaisons pour voir les détails ici.</p>
+                        <Button onClick={() => setActiveSection('analysis')}>Aller à l'analyse</Button>
                       </CardContent>
                     </Card>
                   )}
@@ -310,12 +256,8 @@ export default function Home() {
                           <Sparkles className="h-8 w-8 text-primary" />
                         </div>
                         <h2 className="text-xl font-bold mb-2">Prêt pour les résultats ?</h2>
-                        <p className="text-muted-foreground max-w-sm mx-auto mb-6">
-                          Complétez vos comparaisons et cliquez sur "Calculer" pour voir le classement optimal.
-                        </p>
-                        <Button onClick={() => setActiveSection('analysis')}>
-                          Retour à l'analyse
-                        </Button>
+                        <p className="text-muted-foreground max-w-sm mx-auto mb-6">Complétez vos comparaisons et cliquez sur "Calculer" pour voir le classement optimal.</p>
+                        <Button onClick={() => setActiveSection('analysis')}>Retour à l'analyse</Button>
                       </CardContent>
                     </Card>
                   )}

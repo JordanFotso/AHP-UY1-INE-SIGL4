@@ -23,11 +23,6 @@ import {
 
 const items = [
   {
-    title: 'Dashboard',
-    icon: LayoutDashboard,
-    id: 'setup',
-  },
-  {
     title: 'Configuration',
     icon: Settings2,
     id: 'setup',
