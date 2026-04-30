@@ -24,7 +24,7 @@ const slides = [
     id: 3,
     title: 'Obtenez la meilleure alternative',
     description: 'Recevez un classement pondéré de toutes vos options basé sur vos critères. Découvrez le choix optimal instantanément.',
-    icon: '🎯',
+    icon: '×',
   },
 ];
 
