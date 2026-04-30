@@ -168,10 +168,20 @@ export default function Home() {
     return <Onboarding onComplete={handleOnboardingComplete} />;
   }
 
+  const lockedSections = {
+    analysis: criteria.length < 2 || alternatives.length < 1,
+    details: pairwiseMatrix.length === 0 || results === null,
+    results: results === null,
+  };
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background/95">
-        <AppSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+        <AppSidebar 
+          activeSection={activeSection} 
+          onSectionChange={setActiveSection} 
+          lockedSections={lockedSections}
+        />
         <SidebarInset className="flex flex-col">
           <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border/40 px-6 backdrop-blur-md sticky top-0 z-10">
             <div className="flex items-center gap-4">

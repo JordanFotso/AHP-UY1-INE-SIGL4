@@ -1,12 +1,13 @@
 'use client';
 
 import { 
-  LayoutDashboard, 
   Settings2, 
   Table2, 
   BarChart3, 
   HelpCircle,
-  ChevronRight
+  ChevronRight,
+  Calculator,
+  Lock
 } from 'lucide-react';
 import {
   Sidebar,
@@ -20,6 +21,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
 
 const items = [
   {
@@ -34,7 +36,7 @@ const items = [
   },
   {
     title: 'Détails',
-    icon: LayoutDashboard,
+    icon: Calculator,
     id: 'details',
   },
   {
@@ -47,9 +49,14 @@ const items = [
 interface AppSidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
+  lockedSections: {
+    analysis: boolean;
+    details: boolean;
+    results: boolean;
+  };
 }
 
-export function AppSidebar({ activeSection, onSectionChange }: AppSidebarProps) {
+export function AppSidebar({ activeSection, onSectionChange, lockedSections }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon" className="border-r border-border/50 bg-background/50 backdrop-blur-xl">
       <SidebarHeader className="p-4">
@@ -68,22 +75,32 @@ export function AppSidebar({ activeSection, onSectionChange }: AppSidebarProps) 
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    isActive={activeSection === item.id}
-                    onClick={() => onSectionChange(item.id)}
-                    tooltip={item.title}
-                    className="transition-all duration-200"
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span className="font-medium">{item.title}</span>
-                    {activeSection === item.id && (
-                      <ChevronRight className="ml-auto h-3 w-3 opacity-50" />
-                    )}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item) => {
+                const isLocked = lockedSections[item.id as keyof typeof lockedSections] ?? false;
+                
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      isActive={activeSection === item.id}
+                      onClick={() => onSectionChange(item.id)}
+                      tooltip={item.title}
+                      className={cn(
+                        "transition-all duration-200",
+                        isLocked && "opacity-60 grayscale-[0.5]"
+                      )}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      <span className="font-medium flex items-center gap-2">
+                        {item.title}
+                        {isLocked && <Lock className="h-3 w-3 opacity-50" />}
+                      </span>
+                      {activeSection === item.id && (
+                        <ChevronRight className="ml-auto h-3 w-3 opacity-50" />
+                      )}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -100,7 +117,7 @@ export function AppSidebar({ activeSection, onSectionChange }: AppSidebarProps) 
                 </div>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Documentation" asChild>
+                <SidebarMenuButton tooltip="GitHub" asChild>
                   <a href="https://github.com/JordanFotso" target="_blank" rel="noreferrer">
                     <HelpCircle className="h-4 w-4" />
                     <span className="font-medium">GitHub</span>
